@@ -1,14 +1,13 @@
 package provider
 
 import (
-	// "fmt"
 	"context"
 
 	"github.com/ctreminiom/go-atlassian/assets"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -23,8 +22,8 @@ func NewObjectSchemaDataSource() datasource.DataSource {
 
 // objectSchemaDataSource is the data source implementation.
 type objectSchemaDataSource struct {
-	client *assets.Client
-	worksapce_id string
+	client       *assets.Client
+	workspace_id string
 }
 
 // Metadata returns the data source type name.
@@ -100,8 +99,6 @@ func (d *objectSchemaDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 func (d *objectSchemaDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Debug(ctx, "Reading object schema data source")
 
-	// providerConfig := req.ProviderMeta
-
 	// Create object to hold current state of resource
 	var state objectSchemaDataSourceModel
 	diags := req.Config.Get(ctx, &state)
@@ -111,7 +108,7 @@ func (d *objectSchemaDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Call the API to get the object schema
-	schema, schemaResp, err := d.client.ObjectSchema.Get(ctx, d.worksapce_id, state.Id.ValueString())
+	schema, schemaResp, err := d.client.ObjectSchema.Get(ctx, d.workspace_id, state.Id.ValueString())
 
 	// Return an error if the API call fails
 	if err != nil {
@@ -170,5 +167,5 @@ func (d *objectSchemaDataSource) Configure(ctx context.Context, req datasource.C
 	// }
 
 	d.client = providerClient.client
-	d.worksapce_id = providerClient.workspaceId
+	d.workspace_id = providerClient.workspaceId
 }
