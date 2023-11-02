@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/ctreminiom/go-atlassian/assets"
 )
@@ -46,7 +47,7 @@ type JiraAssetsProviderModel struct {
 
 // struct describes client and worksapceId
 type JiraAssetsProviderClient struct {
-	client *assets.Client
+	client      *assets.Client
 	workspaceId string
 }
 
@@ -76,6 +77,8 @@ func (p *JiraAssetsProvider) Schema(ctx context.Context, req provider.SchemaRequ
 }
 
 func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	tflog.Info(ctx, "Configuring Jira Assets provider")
+
 	var config JiraAssetsProviderModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -171,38 +174,46 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 		return
 	}
 
+	ctx = tflog.SetField(ctx, "jiraassets_workspace_id", workspaceId)
+	ctx = tflog.SetField(ctx, "jiraassets_user", user)
+	ctx = tflog.SetField(ctx, "jiraassets_password", password)
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "jiraassets_password")
+
+	tflog.Debug(ctx, "Creating HashiCups client")
+
 	// create the Jira Assets client
 	client, err := assets.New(nil, "")
-	
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create Assets client",
 			"An unexpected error occured wehn creating the Assets API client. Error: "+err.Error(),
 		)
 	}
-	
+
 	// add authentication headers to the client, workspaceId is added to each request
 	client.Auth.SetBasicAuth(user, password)
 
 	// add workspaceId to response to be used by resources and data sources
 	providerClient := JiraAssetsProviderClient{
-		client: client,
+		client:      client,
 		workspaceId: workspaceId,
 	}
 
 	resp.DataSourceData = providerClient
 	resp.ResourceData = providerClient
+
+	tflog.Info(ctx, "Configured Jira Assets client", map[string]any{"success": true})
 }
 
 func (p *JiraAssetsProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewExampleResource,
+		NewObjectResource,
 	}
 }
 
 func (p *JiraAssetsProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewExampleDataSource,
 		NewObjectSchemaDataSource,
 	}
 }
