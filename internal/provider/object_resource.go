@@ -123,9 +123,6 @@ func (r *objectResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"updated": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"has_avatar": schema.BoolAttribute{
 				Optional: true,
@@ -283,6 +280,74 @@ func (r *objectResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *objectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
+	var plan objectResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Generate API request body from plan
+	// if an attribute is removed from plan, it will not be removed from the object
+	// this is due to how the API only partially updates the object
+	var attributes []*models.ObjectPayloadAttributeScheme
+	for _, attr := range plan.Attributes {
+		attributes = append(attributes, &models.ObjectPayloadAttributeScheme{
+			ObjectTypeAttributeID: attr.AttrTypeId.ValueString(),
+			ObjectAttributeValues: []*models.ObjectPayloadAttributeValueScheme{
+				{
+					Value: attr.AttrValue.ValueString(),
+				},
+			},
+		})
+	}
+
+	// create payload
+	payload := &models.ObjectPayloadScheme{
+		ObjectTypeID: plan.TypeId.ValueString(),
+		Attributes:   attributes,
+		HasAvatar:    plan.HasAvatar.ValueBool(),
+		AvatarUUID:   plan.AvatarUuid.ValueString(),
+	}
+
+	// update object
+	tflog.Info(ctx, "Updating object.", map[string]interface{}{
+		"Id": plan.Id.ValueString(),
+	})
+	object, response, err := r.client.Object.Update(ctx, r.workspace_id, plan.Id.ValueString(), payload)
+	if err != nil {
+		if response != nil {
+			tflog.Error(ctx, "Error updating object: %s", map[string]interface{}{
+				"url":         response.Request.URL,
+				"status_code": response.StatusCode,
+				"headers":     response.Header,
+				"body":        response.Body,
+			})
+		}
+
+		resp.Diagnostics.AddError(
+			"Error during object update",
+			err.Error(),
+		)
+		return
+	}
+
+	// Update resource state with updated object and attributes
+	plan.WorkspaceId = types.StringValue(object.WorkspaceId)
+	plan.GlobalId = types.StringValue(object.GlobalId)
+	plan.Id = types.StringValue(object.ID)
+	plan.Label = types.StringValue(object.Label)
+	plan.ObjectKey = types.StringValue(object.ObjectKey)
+	plan.Created = types.StringValue(object.Created)
+	plan.Updated = types.StringValue(object.Updated)
+	plan.HasAvatar = types.BoolValue(object.HasAvatar)
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
