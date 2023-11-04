@@ -7,6 +7,7 @@ import (
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 
 	// "github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -17,8 +18,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &objectResource{}
-	_ resource.ResourceWithConfigure = &objectResource{}
+	_ resource.Resource                = &objectResource{}
+	_ resource.ResourceWithConfigure   = &objectResource{}
+	_ resource.ResourceWithImportState = &objectResource{}
 )
 
 // NewObjectResource is a helper function to simplify the provider implementation.
@@ -352,6 +354,36 @@ func (r *objectResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *objectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state objectResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Delete existing object
+	response, err := r.client.Object.Delete(ctx, r.workspace_id, state.Id.ValueString())
+	if err != nil {
+		if response != nil {
+			tflog.Error(ctx, "Error deleting object: %s", map[string]interface{}{
+				"url":         response.Request.URL,
+				"status_code": response.StatusCode,
+				"headers":     response.Header,
+				"body":        response.Body,
+			})
+		}
+
+		resp.Diagnostics.AddError(
+			"Error during object deletion",
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *objectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Configure configures the resource with the given configuration.
