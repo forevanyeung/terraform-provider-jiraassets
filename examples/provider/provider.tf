@@ -1,3 +1,5 @@
-provider "scaffolding" {
-  # example configuration here
+provider "jiraassets" {
+  workspace_id = ""
+  user         = ""
+  password     = ""
 }

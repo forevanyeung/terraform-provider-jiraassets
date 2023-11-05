@@ -2,11 +2,11 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ctreminiom/go-atlassian/assets"
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 
-	// "github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -70,33 +70,39 @@ type objectAttrResourceModel struct {
 // Schema defines the schema for the resource.
 func (r *objectResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "A Jira Assets object resource.",
 		Attributes: map[string]schema.Attribute{
 			"workspace_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The ID of the workspace the object belongs to.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"global_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The global ID of the object.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The ID of the object.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"label": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the object. This value is fetched from the attribute that is currently marked as label for the object type of this object",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"object_key": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The external identifier for this object",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -105,14 +111,17 @@ func (r *objectResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Required: true,
 			},
 			"attributes": schema.SetNestedAttribute{
-				Required: true,
+				Required:    true,
+				Description: "The definition of the attribute that is associated with an object type",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"attr_type_id": schema.StringAttribute{
-							Required: true,
+							Description: "The type of the attribute. The type decides how this value should be interpreted",
+							Required:    true,
 						},
 						"attr_value": schema.StringAttribute{
-							Required: true,
+							Description: "The actual values of the object attribute. The size of the values array is determined by the cardinality constraints on the object type attribute as well as how many values are associated with the object attribute",
+							Required:    true,
 						},
 					},
 				},
@@ -130,7 +139,8 @@ func (r *objectResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional: true,
 			},
 			"avatar_uuid": schema.StringAttribute{
-				Optional: true,
+				Optional:    true,
+				Description: "The UUID as retrieved by uploading an avatar.",
 			},
 		},
 	}
@@ -392,7 +402,14 @@ func (r *objectResource) Configure(ctx context.Context, req resource.ConfigureRe
 		return
 	}
 
-	providerClient := req.ProviderData.(JiraAssetsProviderClient)
+	providerClient, ok := req.ProviderData.(JiraAssetsProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *hashicups.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
 
 	r.client = providerClient.client
 	r.workspace_id = providerClient.workspaceId

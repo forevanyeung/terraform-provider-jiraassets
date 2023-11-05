@@ -45,7 +45,7 @@ type JiraAssetsProviderModel struct {
 	Password    types.String `tfsdk:"password"`
 }
 
-// struct describes client and worksapceId
+// JiraAssetsProviderClient describes client and worksapceId.
 type JiraAssetsProviderClient struct {
 	client      *assets.Client
 	workspaceId string
@@ -58,9 +58,10 @@ func (p *JiraAssetsProvider) Metadata(ctx context.Context, req provider.Metadata
 
 func (p *JiraAssetsProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "A Terraform provider for Jira Assets.",
 		Attributes: map[string]schema.Attribute{
 			"workspace_id": schema.StringAttribute{
-				MarkdownDescription: "Workspace Id of the Asssets instance.",
+				MarkdownDescription: "Workspace Id of the Assets instance.",
 				Optional:            true,
 			},
 			"user": schema.StringAttribute{
@@ -187,7 +188,7 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create Assets client",
-			"An unexpected error occured wehn creating the Assets API client. Error: "+err.Error(),
+			"An unexpected error occurred when creating the Assets API client. Error: "+err.Error(),
 		)
 	}
 
