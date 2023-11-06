@@ -95,7 +95,7 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 			path.Root("workspaceId"),
 			"Unknown Assets Workspace Id",
 			"The provider cannot create the Assets API client as there is an unknown configuration value for the Assets API workspace Id. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the JIRASSETS_WORKSPACE_ID environment variable.",
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the JIRAASSETS_WORKSPACE_ID environment variable.",
 		)
 	}
 
@@ -104,7 +104,7 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 			path.Root("user"),
 			"Unknown Assets User",
 			"The provider cannot create the Assets API client as there is an unknown configuration value for the Assets API user. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the JIRASSETS_USER environment variable.",
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the JIRAASSETS_USER environment variable.",
 		)
 	}
 
@@ -113,7 +113,7 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 			path.Root("password"),
 			"Unknown Assets Password",
 			"The provider cannot create the Assets API client as there is an unknown configuration value for the Assets API password. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the JIRASSETS_PASSWORD environment variable.",
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the JIRAASSETS_PASSWORD environment variable.",
 		)
 	}
 
@@ -123,9 +123,9 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 
 	// Default values to environment variables, but override with Terraform configuration value if set.
 
-	workspaceId := os.Getenv("JIRASSETS_WORKSPACE_ID")
-	user := os.Getenv("JIRASSETS_USER")
-	password := os.Getenv("JIRASSETS_PASSWORD")
+	workspaceId := os.Getenv("JIRAASSETS_WORKSPACE_ID")
+	user := os.Getenv("JIRAASSETS_USER")
+	password := os.Getenv("JIRAASSETS_PASSWORD")
 
 	if !config.WorkspaceId.IsNull() {
 		workspaceId = config.WorkspaceId.ValueString()
@@ -146,7 +146,7 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 			path.Root("workspaceId"),
 			"Missing Assets API Workspace Id",
 			"The provider cannot create the Assets API client as there is a missing or empty value for the Assets API workspace Id. "+
-				"Set the host value in the configuration or use the JIRASSETS_WORKSPACE_ID environment variable. "+
+				"Set the host value in the configuration or use the JIRAASSETS_WORKSPACE_ID environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -156,7 +156,7 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 			path.Root("user"),
 			"Missing Assets API User",
 			"The provider cannot create the Assets API client as there is a missing or empty value for the Assets API username. "+
-				"Set the user value in the configuration or use the JIRASSETS_USER environment variable. "+
+				"Set the user value in the configuration or use the JIRAASSETS_USER environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -166,7 +166,7 @@ func (p *JiraAssetsProvider) Configure(ctx context.Context, req provider.Configu
 			path.Root("password"),
 			"Missing Assets API Password",
 			"The provider cannot create the Assets API client as there is a missing or empty value for the Assets API password. "+
-				"Set the password value in the configuration or use the JIRASSETS_PASSWORD environment variable. "+
+				"Set the password value in the configuration or use the JIRAASSETS_PASSWORD environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}

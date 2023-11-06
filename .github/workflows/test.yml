@@ -67,5 +67,8 @@ jobs:
       - run: go mod download
       - env:
           TF_ACC: "1"
+          JIRAASSETS_WORKSPACE_ID: ${{ secrets.JIRAASSETS_WORKSPACE_ID }}
+          JIRAASSETS_USER: ${{ secrets.JIRAASSETS_USER }}
+          JIRAASSETS_PASSWORD: ${{ secrets.JIRAASSETS_PASSWORD }}
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
