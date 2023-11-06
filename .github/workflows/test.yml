@@ -48,7 +48,7 @@ jobs:
           git diff --compact-summary --exit-code || \
             (echo; echo "Unexpected difference in directories after code generation. Run 'go generate ./...' command and commit."; exit 1)
 
-  # Run acceptance tests in a matrix with Terraform CLI versions
+  # Run acceptance tests with latest Terraform CLI version
   test:
     name: Terraform Provider Acceptance Tests
     needs: build
