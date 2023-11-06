@@ -1,3 +1,7 @@
+# Pass all environment variables through
+include .env
+export
+
 default: testacc
 
 # Run acceptance tests
